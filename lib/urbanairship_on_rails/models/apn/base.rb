@@ -36,7 +36,7 @@ module APN
     
     def http_delete(url, data=nil, headers={}, push=false)
       puts "APN::Base.http_delete"
-      http_request(:delete, url, data, headers, push)      
+      http_request(:delete, url, data, headers, push)
     end
 
     private
@@ -106,7 +106,7 @@ module APN
           begin
             response = it.request(req)
             puts "\nResponse #{response.code} #{response.message}:#{response.body}"
-            response
+            response.code
           rescue EOFError => e
             raise ConnectionError, "The remote server dropped the connection"
           rescue Errno::ECONNRESET => e

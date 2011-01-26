@@ -87,8 +87,10 @@ class APN::Notification < APN::Base
   def self.process_pending    
     self.pending.each do |n|
       puts "process #{n.inspect}"
-      n.push({:aps=>{:badge=>n.badge, :alert=>n.alert, :sound=>n.sound}})
-      n.process!
+      response = n.push({:aps=>{:badge=>n.badge, :alert=>n.alert, :sound=>n.sound}})
+      if response == "200"
+        n.process!
+      end
     end    
   end
     
