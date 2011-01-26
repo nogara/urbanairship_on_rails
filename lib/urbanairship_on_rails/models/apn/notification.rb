@@ -10,7 +10,7 @@
 #   apn.save
 # 
 # To deliver call the following method:
-#   APN::Notification.send_notifications
+#   APN::Notification.process_pending
 # 
 # As each APN::Notification is sent the <tt>sent_at</tt> column will be timestamped,
 # so as to not be sent again.
@@ -81,7 +81,7 @@ class APN::Notification < APN::Base
   end
   
   def update_sent_at
-    sent_at = Time.now
+    self.sent_at = Time.now
   end
   
   def self.process_pending    
