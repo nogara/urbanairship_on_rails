@@ -49,6 +49,10 @@ HOW TO CONFIGURE
 		rake apn:push or
 		script/runner APN::Notification.process_pending
 
+	Set up a cron job to push and manage broadcast notifications
+		rake apn:broadcast_push or
+		script/runner APN::BroadcastNotification.process_pending
+
 
 =======
 API CALLS and current support level
