@@ -7,7 +7,7 @@ class CreateApnNotifications < ActiveRecord::Migration # :nodoc:
       t.string :device_language, :size => 5 # if you don't want to send localized strings
       t.string :sound
       t.string :alert, :size => 150
-      t.string :badge
+      t.integer :badge
       t.datetime :sent_at
       t.string :state
       t.timestamps
