@@ -20,6 +20,7 @@ ruby script/plugin install git://github.com/rickerbh/urbanairship_on_rails.git
 HOW TO GENERATE MIGRATIONS
 =======
 ruby script/generate apn_migrations
+rake db:migrate
 
 =======
 HOW TO CONFIGURE
@@ -66,7 +67,7 @@ BATCH PUSH
 	NOT YET SUPPORTED
 
 BROADCAST
-	NOT YET SUPPORTED
+  APN::BroadcastNotifcation.push		=> HTTP POST to /api/push/broadcast/
 
 FEEDBACK SERVICE
 	APN::Feedback.push(			=> HTTP GET to /api/device_tokens/feedback/?since=<timestamp> 
