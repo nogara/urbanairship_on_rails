@@ -13,4 +13,10 @@ namespace :apn do
   task :push => [:environment] do
     APN::Notification.process_pending
   end
+
+  desc "send all pending broadcast notifications to devices"
+  task :broadcast_push => [:environment] do
+    APN::BroadcastNotification.process_pending
+  end
+
 end
