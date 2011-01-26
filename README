@@ -17,6 +17,11 @@ HOW TO INSTALL
 ruby script/plugin install git://github.com/rickerbh/urbanairship_on_rails.git
 
 =======
+HOW TO GENERATE MIGRATIONS
+=======
+ruby script/generate apn_migrations
+
+=======
 HOW TO CONFIGURE
 =======
 
