@@ -31,7 +31,7 @@ class APN::Notification < APN::Base
   aasm_state :processed, :enter => :update_sent_at
 
   aasm_event :process do
-    transitions :from => :pending, :to => :processed
+    transitions :from => :pending, :to => :processed, :guard => :check_response
   end
       
   # An HTTP POST to /api/push/ performs a push notification to one or more users. 
@@ -84,14 +84,19 @@ class APN::Notification < APN::Base
     self.sent_at = Time.now
   end
   
-  def self.process_pending    
+  def self.process_pending
     self.pending.each do |n|
       puts "process #{n.inspect}"
-      response = n.push({:aps=>{:badge=>n.badge, :alert=>n.alert, :sound=>n.sound}})
-      if response == "200"
-        n.process!
-      end
-    end    
+      n.last_response_code = n.push({:aps=>{:badge=>n.badge, :alert=>n.alert, :sound=>n.sound}})
+      n.save
+      n.process!
+    end
+  end
+    
+  protected
+  
+  def check_response
+    self.last_response_code == 200 ? true : false
   end
     
 end # APN::Notification
