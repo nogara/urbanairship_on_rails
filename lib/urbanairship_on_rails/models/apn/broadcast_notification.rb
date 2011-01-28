@@ -6,6 +6,7 @@
 #   apn.badge = 5
 #   apn.sound = 'my_sound.aiff'
 #   apn.alert = 'Hello!'
+#   apn.custom_properties = {:email_id => "6", :link => "http://google.com"}
 #   apn.save
 # 
 # To deliver call the following method:
