@@ -115,9 +115,9 @@ module APN
             raise RetriableConnectionError, "The remote server refused the connection"
           rescue Timeout::Error, Errno::ETIMEDOUT => e
             raise ConnectionError, "The connection to the remote server timed out"
-          end          
+          end
         end
-      }      
+      }
     end
 
   end
