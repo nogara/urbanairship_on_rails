@@ -12,6 +12,7 @@ class APN::Device < APN::Base
   
   belongs_to :user, :dependent=>:delete
   has_many :notifications, :class_name => 'APN::Notification'
+  has_many :excluded_devices_for_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
 
   validates_presence_of :token
   validates_uniqueness_of :token

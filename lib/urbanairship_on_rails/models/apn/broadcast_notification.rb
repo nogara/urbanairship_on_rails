@@ -19,6 +19,8 @@ class APN::BroadcastNotification < APN::Base
   include ::ActionView::Helpers::TextHelper
   extend ::ActionView::Helpers::TextHelper
   
+  has_many :excluded_devices_for_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
+  
   serialize :custom_properties
     
   #
@@ -48,10 +50,11 @@ class APN::BroadcastNotification < APN::Base
       end
     end
     
-    # result['exclude_tokens'] = []
-    # self.exclude_tokens.each do |token|
-    #   result['exclude_tokens'] << token
-    # end
+    result['exclude_tokens'] = []
+    self.excluded_devices_for_notifications.each do |excluded|
+      result['exclude_tokens'] << excluded.device.token_for_ua
+    end
+    
     result
   end
   

@@ -22,6 +22,7 @@ class APN::Notification < APN::Base
 
   serialize :custom_properties
   
+  has_many :excluded_devices_for_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
   belongs_to :device, :class_name => 'APN::Device'
 
   #
