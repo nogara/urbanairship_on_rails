@@ -10,6 +10,10 @@ require 'json'
 class APN::Feedback < APN::Base
   include AASM
 
+  named_scope :last_feedback_request, lambda {
+      { :conditions => "state = 'processed'", :order => "id DESC" }
+  }
+  
   #
   # MODEL STATE MACHINE
   #
@@ -35,34 +39,37 @@ class APN::Feedback < APN::Base
   def run
     raise "save feedback record before running" if self.new_record?
     get_feedback { |results| 
-      puts results.inspect
-      if results.code.to_i == 200         
-        result = JSON.parse(results.body) # parse json results
 
+      puts results.inspect
+      if results.code.to_i == 200
+        result = JSON.parse(results.body) # parse json results
         result.each do |item| # iterate results and delete devices that have been deactivated
-          # puts "    search and destroy #{item['device_token']}"      
-          d = APN::Device.find_by_token(item['device_token'])
+          # puts "    search and destroy #{item['device_token']}"
+          d = APN::Device.find_by_ua_token(item['device_token'])
           d.destroy if d
         end
-        
         self.process!
-      end   
-    }        
+      end
+    }
   end
+  
   def get_feedback
     self.activate!
     # puts "APN::get_feedback"
-    time = 1.day.ago.iso8601
+    # time = 1.day.ago.iso8601
+    time = last_feedback_time
     # puts "    since #{time}"
-    
     result = http_get("/api/device_tokens/feedback/?since=#{time}", nil, {}, true) 
-
     self.code = result.code.to_s
     self.message = result.message.to_s
     self.body = result.body.to_s
-        
+
     yield result if block_given?
-    
+  end
+  
+  def last_feedback_time
+    f = APN::Feedback.last_feedback_request.first
+    f.nil? ? Time.at(0).iso8601 : f.created_at.iso8601
   end
   
 end

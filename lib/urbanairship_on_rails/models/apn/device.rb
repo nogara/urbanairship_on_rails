@@ -9,17 +9,18 @@
 # Example:
 #   Device.create(:token => '5gxadhy6 6zmtxfl6 5zpbcxmw ez3w7ksf qscpr55t trknkzap 7yyt45sc g6jrw7qz')
 class APN::Device < APN::Base
-  
-  belongs_to :user, :dependent=>:delete
+
+  before_destroy :unregister, :destroy_undelivered_notifications, :destroy_undelivered_broadcast_exclusions
+  before_save :set_last_registered_at
+
+  belongs_to :user, :dependent => :delete
   has_many :notifications, :class_name => 'APN::Notification'
-  has_many :excluded_devices_for_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
+  has_many :exclusions_from_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
 
   validates_presence_of :token
   validates_uniqueness_of :token
   validates_format_of :token, :with => /^[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}$/
-  
-  before_save :set_last_registered_at
-  
+        
   # The <tt>feedback_at</tt> accessor is set when the 
   # device is marked as potentially disconnected from your
   # application by Apple.
@@ -80,18 +81,38 @@ class APN::Device < APN::Base
   # The DELETE returns HTTP 204 No Content, and needs no payload.
   # 
   # When a token is DELETEd in this manner, any alias or tags will be cleared.
-  def unregister
-    puts "APN::Device.unregister"
-    http_delete("/api/device_tokens/#{self.token_for_ua}")
-  end
   
   def token_for_ua
     self.token.gsub(' ', '').upcase
   end
   
-  before_destroy :unregister  
+  def self.find_by_ua_token(ua_token)
+    find_by_token(ua_token.downcase.scan(/.{8}/).join(" "))
+  end
   
   private
+  
+  def unregister
+    puts "APN::Device.unregister"
+    http_delete("/api/device_tokens/#{self.token_for_ua}")
+  end
+  
+  
+  def destroy_undelivered_notifications
+    self.notifications.pending.each do |notification|
+      notification.excluded_devices_for_notifications.first.destroy unless notification.excluded_devices_for_notifications.first.nil?
+      notification.destroy
+    end
+  end
+
+  def destroy_undelivered_broadcast_exclusions
+    # raise self.exclusions_from_notifications.broadcasts.inspect
+    self.exclusions_from_notifications.broadcasts.each do |exclusion|
+      unless exclusion.broadcast_notification.nil?
+        exclusion.destroy unless exclusion.broadcast_notification.processed?
+      end
+    end
+  end
 
   def set_last_registered_at
     self.last_registered_at = Time.now if self.last_registered_at.nil?

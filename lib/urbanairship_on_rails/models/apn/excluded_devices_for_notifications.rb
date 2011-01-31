@@ -10,6 +10,11 @@ class APN::ExcludedDevicesForNotification < APN::Base
   validates_uniqueness_of :notification_id, :scope => :device_id, :allow_nil => true
   validates_uniqueness_of :broadcast_notification_id, :scope => :device_id, :allow_nil => true
   
+  named_scope :broadcasts, lambda { 
+      { :conditions => "broadcast_notification_id IS NOT NULL" }
+    }  
+  
+  
   def has_broadcast_notification?
     broadcast_notification.nil? ? false : true
   end

@@ -106,7 +106,7 @@ module APN
           begin
             response = it.request(req)
             puts "\nResponse #{response.code} #{response.message}:#{response.body}"
-            response.code
+            response
           rescue EOFError => e
             raise ConnectionError, "The remote server dropped the connection"
           rescue Errno::ECONNRESET => e

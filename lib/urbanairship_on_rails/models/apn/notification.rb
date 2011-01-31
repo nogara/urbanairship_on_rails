@@ -66,7 +66,8 @@ class APN::Notification < APN::Base
   def self.process_pending
     self.pending.each do |n|
       puts "process #{n.inspect}"
-      n.last_response_code = n.push
+      result = n.push
+      n.last_response_code = result.code
       n.save
       n.process!
     end
@@ -83,5 +84,5 @@ class APN::Notification < APN::Base
   def check_response
     self.last_response_code == 200 ? true : false
   end
-    
+  
 end # APN::Notification
