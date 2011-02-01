@@ -13,8 +13,7 @@
 # To deliver call the following method:
 #   APN::Notification.process_pending
 # 
-# As each APN::Notification is sent the <tt>sent_at</tt> column will be timestamped,
-# so as to not be sent again.
+
 class APN::Notification < APN::Base
   include AASM
   include ::ActionView::Helpers::TextHelper
@@ -24,6 +23,9 @@ class APN::Notification < APN::Base
   
   has_many :excluded_devices, :class_name => 'APN::ExcludedDevicesForNotification'
   belongs_to :device, :class_name => 'APN::Device'
+  
+  validates_presence_of :device, :on => :create, :message => "can't be blank"
+  validate_on_create :device_state
 
   #
   # MODEL STATE MACHINE
@@ -33,11 +35,16 @@ class APN::Notification < APN::Base
   
   aasm_state :pending
   aasm_state :processed, :enter => :update_sent_at
+  aasm_state :inactive_device
 
   aasm_event :process do
     transitions :from => :pending, :to => :processed, :guard => :check_response
   end
-        
+
+  aasm_event :set_to_inactive do
+    transitions :from => :pending, :to => :inactive_device
+  end
+
   def apple_hash
     result = {}
     result['aps'] = {}
@@ -85,6 +92,10 @@ class APN::Notification < APN::Base
   
   def check_response
     self.last_response_code == 200 ? true : false
+  end
+  
+  def device_state
+    errors.add(:device, "must not be marked as inactive") if device.inactive?
   end
   
 end # APN::Notification

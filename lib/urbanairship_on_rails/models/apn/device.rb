@@ -113,6 +113,9 @@ class APN::Device < APN::Base
 
   def set_last_inactive_at
     self.last_inactive_at = Time.now
+    self.notifications.pending.each do |n|
+      n.set_to_inactive!
+    end
   end
 
   def check_response
