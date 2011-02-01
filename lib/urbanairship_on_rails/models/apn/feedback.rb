@@ -38,15 +38,14 @@ class APN::Feedback < APN::Base
     
   def run
     raise "save feedback record before running" if self.new_record?
-    get_feedback { |results| 
+    get_feedback { |results|
 
       puts results.inspect
       if results.code.to_i == 200
         result = JSON.parse(results.body) # parse json results
         result.each do |item| # iterate results and delete devices that have been deactivated
-          # puts "    search and destroy #{item['device_token']}"
           d = APN::Device.find_by_ua_token(item['device_token'])
-          d.destroy if d
+          d.deactivate! if d
         end
         self.process!
       end
@@ -59,7 +58,7 @@ class APN::Feedback < APN::Base
     # time = 1.day.ago.iso8601
     time = last_feedback_time
     # puts "    since #{time}"
-    result = http_get("/api/device_tokens/feedback/?since=#{time}", nil, {}, true) 
+    result = http_get("/api/device_tokens/feedback/?since=#{time}", nil, {}, true)
     self.code = result.code.to_s
     self.message = result.message.to_s
     self.body = result.body.to_s

@@ -11,10 +11,12 @@ DEPENDENCIES
 requires JSON gem
 AASM
 
+Note: If you use the aasm gem, you may need to install the gem before you 'config.gem "aasm"' in your environment.rb or include it in your Gemfile.
+
 =======
 HOW TO INSTALL
 =======
-ruby script/plugin install git://github.com/rickerbh/urbanairship_on_rails.git
+ruby script/plugin install git://github.com/yonnage/urbanairship_on_rails
 
 =======
 HOW TO GENERATE MIGRATIONS
@@ -26,32 +28,135 @@ rake db:migrate
 HOW TO CONFIGURE
 =======
 
-	=====
-	Create an initializer named urbanairship.rb with the following content
-	require File.dirname(__FILE__) + '/../../vendor/plugins/urbanairship_on_rails/lib/urbanairship_on_rails/libs/config'
-	UA::Config::app_key      = 'YOUR_APP_KEY'
-	UA::Config::app_secret   = 'YOUR_APP_SECRET'
-	UA::Config::push_secret  = 'YOUR_PUSH_SECRET'
-	UA::Config::push_host    = 'go.urbanairship.com'
-	UA::Config::push_port    = '443'
+  =====
+  Create an initializer named urbanairship.rb with the following content
+  require File.dirname(__FILE__) + '/../../vendor/plugins/urbanairship_on_rails/lib/urbanairship_on_rails/libs/config'
+  UA::Config::app_key      = 'YOUR_APP_KEY'
+  UA::Config::app_secret   = 'YOUR_APP_SECRET'
+  UA::Config::push_secret  = 'YOUR_PUSH_SECRET'  ### CURRENTLY KNOWN AS "Application Master Secret" on Urban Airship
+  UA::Config::push_host    = 'go.urbanairship.com'
+  UA::Config::push_port    = '443'
 
-	=====
-	Create User => Device relationship
+  =====
+  Set up a daily cron job to set inactive devices to "inactive"
+    rake apn:feedback or
+    script/runner APN:Feedback.create().run
 
-	belongs_to :device, :class_name=>"APN::Device"
+  Set up a cron job to push and manage notifications
+    rake apn:push or
+    script/runner APN::Notification.process_pending
 
-	=====
-	Set up a daily cron job to clean out inactive device registrations 
-		rake apn:feedback or
-		script/runner APN:Feedback.create().run
+  Set up a cron job to push and manage broadcast notifications
+    rake apn:broadcast_push or
+    script/runner APN::BroadcastNotification.process_pending
 
-	Set up a cron job to push and manage notifications
-		rake apn:push or
-		script/runner APN::Notification.process_pending
 
-	Set up a cron job to push and manage broadcast notifications
-		rake apn:broadcast_push or
-		script/runner APN::BroadcastNotification.process_pending
+=== Examples of Use
+
+  == Create and register a device:
+    
+    # Create device:
+    ## Requires a unique token. Token format should be: 5gxadhy6 6zmtxfl6 5zpbcxmw ez3w7ksf qscpr55t trknkzap 7yyt45sc g6jrw7qz
+    
+    device = APN::Device.find_or_create_by_token(:token => token)
+
+
+    #Register the device with Urban Airship
+    
+    device.register
+
+    # Your device is now registered and ready to receive notifications.
+
+
+    # Your mobile application should try to register itself each time the application is launched, which is why it's important
+    # to do "find_or_create_by_token"
+  
+  
+  == Create and send a single simple Notification:
+    
+    # Basic Options for Notifications:
+    # alert - The message the device will receive.
+    # badge - The number of badges (red circle with number) on the device.
+    # sound - This is the sound heard on the device.  "default" is the standard device notification sound.
+    # device - The device to send the notification to.
+    
+    n = APN::Notification.create(:alert => "Hello, World", :badge => 1, :sound => "default", :device => device)
+    
+    # Now send the notification to the device:
+
+    n.push
+  
+
+  == Create and send a single Notification with more options:
+  
+    # Adding more options to a notification.
+    # sound - You can also use specific sounds for the alert which are already included as part of the mobile app.
+    # badge - Urban Airship supports auto increment / decrement of badges.  Pass "+1" or "-1".
+    # custom_properties - Extra information you need to pass to the device.
+    
+    n = APN::Notification.create(:alert => "Hello, World", :badge => "+1", :device => device, :sound => "alert1.wav", :custom_properties => {:link => "http://google.com/", :link_id => 7})
+
+
+    # Now send the notification to the device
+
+    n.push
+    
+
+  == Send all pending notifications:
+    
+    # Instead of sending each notification as it is created, you can send them all at once.
+        
+    APN::Notification.process_pending
+    
+
+    # Or setup a cron rake task:
+    
+    rake apn:push
+    
+    
+  == Broadcast Notifications
+  
+    # Send the same notification to all devices.
+    # Use this to avoid making multiple connections if you are sending the same message to all devices.
+  
+    APN::BroadcastNotification.create(:alert => "Hello, World", :badge => 1, :sound => "default")
+
+
+    # Push the BroadcastNotification
+
+    APN::BroadcastNotification.process_pending
+  
+
+    == Broadcast Notifications with Device exclusions.
+  
+    # You can exclude devices from receiving a broadcast notification.
+  
+    n = APN::BroadcastNotification.create(:alert => "Hello, World", :badge => 1, :sound => "default")
+  
+  
+    # Exclude any devices that should not receive the above notification.
+  
+    n.excluded_devices.create(:broadcast_notification => n, :device => APN::Device.find(1))
+    n.excluded_devices.create(:broadcast_notification => n, :device => APN::Device.find(2))
+    n.excluded_devices.create(:broadcast_notification => n, :device => APN::Device.find(3))
+
+
+    # Push the Broadcast Notification:
+    
+    n.push
+    
+    # -- OR -- Push all pending Broadcast Notifications:
+    
+    APN::BroadcastNotification.process_pending
+    
+
+  == Feedback for Devices
+  
+    # When a device no longer accepts notifications from your application because of reasons such as the application being removed,
+    # Urban Airship will stop trying to send notifications to those devices.  You should run the "feedback" task daily to find and
+    # mark all inactive devices as such.
+    
+    rake apn:feedback
 
 
 =======
@@ -59,48 +164,25 @@ API CALLS and current support level
 =======
 
 REGISTRATION
-	
-	APN::Device.register 		=> HTTP PUT to /api/device_tokens/<device_token>
-	APN::Device.read 			=> HTTP GET to /api/device_tokens/<device_token>
-	APN::Device.unregister 		=> HTTP DELETE to /api/device_tokens/<device_token>
+  
+  APN::Device.register              => HTTP PUT to /api/device_tokens/<device_token>
+  APN::Device.read                  => HTTP GET to /api/device_tokens/<device_token>
+  APN::Device.unregister            => HTTP DELETE to /api/device_tokens/<device_token>
 
 PUSH
-	APN::Notifcation.push		=> HTTP POST to /api/push/
+  APN::Notifcation.push             => HTTP POST to /api/push/
 
 BATCH PUSH
-	NOT YET SUPPORTED
+  NOT YET SUPPORTED
 
 BROADCAST
-  APN::BroadcastNotifcation.push		=> HTTP POST to /api/push/broadcast/
+  APN::BroadcastNotifcation.push    => HTTP POST to /api/push/broadcast/
 
 FEEDBACK SERVICE
-	APN::Feedback.push(			=> HTTP GET to /api/device_tokens/feedback/?since=<timestamp> 
+  APN::Feedback.create().run        => HTTP GET to /api/device_tokens/feedback/?since=<timestamp> 
 
 STATISTICS
-	NOT YET SUPPORTED
-
-=======
-Example
-=======
-
-To Create and register a device
-	user.device.create(:token => "token_from_device")
-	user.device.register(options)
-
-To Read device and tags
-	user.device.read
-
-To unregister a device
-	user.device.unregister
-
-To destroy device record (and unregister)
-	user.device.destroy
-
-To create push notification
-	user.device.create_notification.create(:badge=>'', :alert=>'', :sound=>'')
-	
-To immediately push a notification
-	user.device.notifications.last.push
+  NOT YET SUPPORTED
 
 
 Copyright (c) 2009 [Russell Sherman(code-ronin@code-ronin.com)], released under the MIT license

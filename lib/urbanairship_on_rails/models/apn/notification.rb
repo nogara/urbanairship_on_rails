@@ -22,7 +22,7 @@ class APN::Notification < APN::Base
 
   serialize :custom_properties
   
-  has_many :excluded_devices_for_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
+  has_many :excluded_devices, :class_name => 'APN::ExcludedDevicesForNotification'
   belongs_to :device, :class_name => 'APN::Device'
 
   #
@@ -56,7 +56,11 @@ class APN::Notification < APN::Base
   end
   
   def push
-    http_post("/api/push/", apple_hash, {}, true)
+    puts "process #{self.inspect}"
+    result = http_post("/api/push/", apple_hash, {}, true)
+    self.last_response_code = result.code
+    self.save
+    self.process!
   end
   
   def update_sent_at
@@ -65,11 +69,9 @@ class APN::Notification < APN::Base
   
   def self.process_pending
     self.pending.each do |n|
-      puts "process #{n.inspect}"
-      result = n.push
-      n.last_response_code = result.code
-      n.save
-      n.process!
+      unless n.device.inactive?
+        n.push
+      end
     end
   end
     

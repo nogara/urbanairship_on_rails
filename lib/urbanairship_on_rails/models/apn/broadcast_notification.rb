@@ -19,7 +19,7 @@ class APN::BroadcastNotification < APN::Base
   include ::ActionView::Helpers::TextHelper
   extend ::ActionView::Helpers::TextHelper
   
-  has_many :excluded_devices_for_notifications, :class_name => 'APN::ExcludedDevicesForNotification'
+  has_many :excluded_devices, :class_name => 'APN::ExcludedDevicesForNotification'
   
   serialize :custom_properties
     
@@ -51,7 +51,7 @@ class APN::BroadcastNotification < APN::Base
     end
     
     result['exclude_tokens'] = []
-    self.excluded_devices_for_notifications.each do |excluded|
+    self.excluded_devices.each do |excluded|
       result['exclude_tokens'] << excluded.device.token_for_ua
     end
     
@@ -59,7 +59,11 @@ class APN::BroadcastNotification < APN::Base
   end
   
   def push
-    http_post("/api/push/broadcast/", apple_hash, {}, true)
+    puts "process #{self.inspect}"
+    result = http_post("/api/push/broadcast/", apple_hash, {}, true)
+    self.last_response_code = result.code
+    self.save
+    self.process!
   end
   
   def update_sent_at
@@ -68,11 +72,7 @@ class APN::BroadcastNotification < APN::Base
   
   def self.process_pending
     self.pending.each do |n|
-      puts "process #{n.inspect}"
-      result = n.push
-      n.last_response_code = result.code
-      n.save
-      n.process!
+      n.push
     end
   end
   
