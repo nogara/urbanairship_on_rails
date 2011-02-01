@@ -94,7 +94,7 @@ HOW TO CONFIGURE
     # badge - Urban Airship supports auto increment / decrement of badges.  Pass "+1" or "-1".
     # custom_properties - Extra information you need to pass to the device.
     
-    n = APN::Notification.create(:alert => "Hello, World", :badge => "+1", :device => device, :sound => "alert1.wav", :custom_properties => {:link => "http://google.com/", :link_id => 7})
+    n = APN::Notification.create(:alert => "Hello, World", :badge => "+1", :device => device, :sound => "alert1.wav", :custom_properties => {:link => "http://google.com", :link_id => 7})
 
 
     # Now send the notification to the device
