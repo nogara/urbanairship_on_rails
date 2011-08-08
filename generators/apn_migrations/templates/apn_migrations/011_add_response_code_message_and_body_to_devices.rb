@@ -1,4 +1,4 @@
-class AddLastInactiveAtToDevices < ActiveRecord::Migration # :nodoc:
+class AddResponseCodeMessageAndBodyToDevices < ActiveRecord::Migration # :nodoc:
   def self.up
     add_column :apn_devices, :state, :string, :default => 'created', :after => :token
     add_column :apn_devices, :response_code, :string, :after => :state

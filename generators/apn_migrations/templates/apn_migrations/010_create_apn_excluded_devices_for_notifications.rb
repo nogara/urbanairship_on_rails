@@ -6,6 +6,7 @@ class CreateApnExcludedDevicesForNotifications < ActiveRecord::Migration # :nodo
       t.integer :broadcast_notification_id
       t.timestamps
     end
+    
     add_index(:apn_excluded_devices_for_notifications, [:device_id, :notification_id], :unique => true, :name => 'by_device_notfication')
     add_index(:apn_excluded_devices_for_notifications, [:device_id, :broadcast_notification_id], :unique => true, :name => 'by_device_broadcast_notfication')
   end

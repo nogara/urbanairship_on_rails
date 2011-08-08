@@ -1,5 +1,4 @@
 class CreateApnBroadcastNotifications < ActiveRecord::Migration # :nodoc:
-  
   def self.up
     create_table :apn_broadcast_notifications do |t|
       t.integer :errors_nb, :default => 0 # used for storing errors from apple feedbacks
@@ -16,5 +15,4 @@ class CreateApnBroadcastNotifications < ActiveRecord::Migration # :nodoc:
   def self.down
     drop_table :apn_broadcast_notifications
   end
-  
 end

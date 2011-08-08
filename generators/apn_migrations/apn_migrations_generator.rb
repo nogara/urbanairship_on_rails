@@ -1,31 +1,32 @@
-require 'rails_generator'
-# Generates the migrations necessary for APN on Rails.
-# This should be run upon install and upgrade of the 
-# APN on Rails gem.
-# 
-#   $ ruby script/generate apn_migrations
-class ApnMigrationsGenerator < Rails::Generator::Base
+require 'rails/generators/migration'
+require 'rails/generators/active_record'
+
+class ApnMigrationsGenerator < Rails::Generators::NamedBase
+  include Rails::Generators::Migration
   
-  def manifest # :nodoc:
-    record do |m|
-      timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
-      db_migrate_path = File.join('db', 'migrate')
-      
-      m.directory(db_migrate_path)
-      
-      Dir.glob(File.join(File.dirname(__FILE__), 'templates', 'apn_migrations', '*.rb')).sort.each_with_index do |f, i|
-        f = File.basename(f)
-        f.match(/\d+\_(.+)/)
-        timestamp = timestamp.succ
-        if Dir.glob(File.join(db_migrate_path, "*_#{$1}")).empty?
-          m.file(File.join('apn_migrations', f), 
-                 File.join(db_migrate_path, "#{timestamp}_#{$1}"), 
-                 {:collision => :skip})
-        end
-      end
-      
-    end # record
-    
-  end # manifest
+  source_root File.expand_path('../apn_migrations/templates', __FILE__)
   
-end # ApnMigrationsGenerator
+  def self.next_migration_number(path)
+    ActiveRecord::Generators::Base.next_migration_number(path)
+  end
+  
+  def setup_urban_airship_initializer
+    initializer "urban_airship.rb" do
+      configs = ""
+      configs << "UA::Config.app_key = 'YOUR APP KEY'\n"
+      configs << "UA::Config.app_secret = 'YOUR APP SECRET'\n"
+      configs << "UA::Config.push_secret = 'YOUR PUSH SECRET'\n"
+      configs << "UA::Config.push_host = 'go.urbanairship.com'\n"
+      configs << "UA::Config.push_port = '443'\n"
+      
+      configs
+    end
+  end
+  
+  def create_migrations # :nodoc:    
+    Dir.glob(File.join(File.dirname(__FILE__), 'templates', '*.rb')).sort.each_with_index do |f, i|
+      _migration = File.basename(f).gsub(/^(\d+_)/, '')
+      migration_template File.basename(f), "db/migrate/#{ _migration }"
+    end
+  end
+end

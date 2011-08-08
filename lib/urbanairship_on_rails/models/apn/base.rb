@@ -2,7 +2,6 @@ require 'net/http'
 require 'net/https'
 
 module APN
-
   class ConnectionError < StandardError
   end
   
@@ -10,7 +9,6 @@ module APN
   end
 
   class Base < ActiveRecord::Base # :nodoc:
-
     MAX_RETRIES = 3
     OPEN_TIMEOUT = 60
     READ_TIMEOUT = 60

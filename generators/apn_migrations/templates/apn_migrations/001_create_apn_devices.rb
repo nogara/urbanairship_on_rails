@@ -5,6 +5,7 @@ class CreateApnDevices < ActiveRecord::Migration # :nodoc:
       t.datetime :last_registered_at
       t.timestamps
     end
+    
     add_index :apn_devices, :token, :unique => true
   end
 

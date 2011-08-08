@@ -1,5 +1,4 @@
 class CreateApnNotifications < ActiveRecord::Migration # :nodoc:
-  
   def self.up
     create_table :apn_notifications do |t|
       t.integer :device_id, :null => false
@@ -12,6 +11,7 @@ class CreateApnNotifications < ActiveRecord::Migration # :nodoc:
       t.string :state
       t.timestamps
     end
+    
     add_index :apn_notifications, :device_id
   end
 
