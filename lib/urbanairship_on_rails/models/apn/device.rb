@@ -53,6 +53,7 @@ class APN::Device < APN::Base
     unless res.nil? || res.empty?
       token = res.first
     end
+    if token.match /[A-Za-z0-9]{64}/
       token = "#{token[0..7]} #{token[8..15]} #{token[16..23]} #{token[24..31]} #{token[32..39]} #{token[40..47]} #{token[48..55]} #{token[56..63]}"
     end
     write_attribute('token', token)
