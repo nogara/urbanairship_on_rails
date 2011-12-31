@@ -25,7 +25,7 @@ class APN::Notification < APN::Base
   belongs_to :device, :class_name => 'APN::Device'
   
   validates_presence_of :device, :on => :create, :message => "can't be blank"
-  validate_on_create :device_state
+  validate :device_state :on => :create
 
   #
   # MODEL STATE MACHINE
