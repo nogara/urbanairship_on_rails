@@ -10,7 +10,7 @@ require 'json'
 class APN::Feedback < APN::Base
   include AASM
 
-  named_scope :last_feedback_request, lambda {
+  scope :last_feedback_request, lambda {
       { :conditions => "state = 'processed'", :order => "id DESC" }
   }
   
