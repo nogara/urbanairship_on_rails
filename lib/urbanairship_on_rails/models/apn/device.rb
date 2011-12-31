@@ -20,7 +20,7 @@ class APN::Device < APN::Base
 
   validates_presence_of :token
   validates_uniqueness_of :token
-  validates_format_of :token, :with => /^[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}\s[a-z0-9]{8}$/
+  validates_format_of :token, :with => /^[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}\s[A-Za-z0-9]{8}$/
 
   # The <tt>feedback_at</tt> accessor is set when the 
   # device is marked as potentially disconnected from your
