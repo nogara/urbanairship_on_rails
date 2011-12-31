@@ -68,7 +68,7 @@ class APN::Feedback < APN::Base
   
   def last_feedback_time
     f = APN::Feedback.last_feedback_request.first
-    f.nil? ? Time.at(0).iso8601 : f.created_at.iso8601
+    f.nil? ? (Time.now - 1.week).iso8601 : f.created_at.iso8601
   end
   
 end
