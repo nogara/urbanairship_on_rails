@@ -56,7 +56,7 @@ class APN::Notification < APN::Base
     if self.custom_properties
       self.custom_properties.each do |key,value|
         result["#{key}"] = "#{value}"
-        result['aps']["#{key}"] = "#{value}"
+        result['aps']["#{key}"] = value
       end
     end
     result['device_tokens'] = self.device.token_for_ua
